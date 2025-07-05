@@ -1,15 +1,17 @@
 import { connectDB } from "@/lib/db";
 import Transaction from "@/models/Transaction";
 import { NextRequest, NextResponse } from "next/server";
+import type { NextApiRequest } from "next"; // (not needed for App Router)
+import type { NextRequestContext } from "next/server"; // ✅ use this instead
 
 // ✅ PUT /api/transactions/[id]
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
     const body = await request.json();
 
     const updated = await Transaction.findByIdAndUpdate(id, body, { new: true });
@@ -28,11 +30,11 @@ export async function PUT(
 // ✅ DELETE /api/transactions/[id]
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
 
     const deleted = await Transaction.findByIdAndDelete(id);
 
