@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -13,9 +12,12 @@ import {
 } from "recharts";
 
 interface Transaction {
+  _id: string;
   amount: number;
+  description: string;
   date: string;
   type: "income" | "expense";
+  category?: string;
 }
 
 interface ChartEntry {
@@ -24,78 +26,58 @@ interface ChartEntry {
   expense: number;
 }
 
-export default function MonthlyBarChart() {
-  const [data, setData] = useState<ChartEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface Props {
+  transactions: Transaction[];
+}
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch("/api/transactions");
-        if (!res.ok) throw new Error("Failed to fetch transactions");
+export default function MonthlyBarChart({ transactions }: Props) {
+  const grouped: Record<string, { income: number; expense: number }> = {};
 
-        const txs: Transaction[] = await res.json();
+  transactions.forEach((tx) => {
+    const date = new Date(tx.date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
-        const grouped: Record<string, { income: number; expense: number }> = {};
-
-        txs.forEach((tx) => {
-          const date = new Date(tx.date);
-          const monthKey = `${date.getFullYear()}-${String(
-            date.getMonth() + 1
-          ).padStart(2, "0")}`; // e.g., 2025-07
-
-          if (!grouped[monthKey]) {
-            grouped[monthKey] = { income: 0, expense: 0 };
-          }
-
-          if (tx.type === "income") {
-            grouped[monthKey].income += tx.amount;
-          } else {
-            grouped[monthKey].expense += tx.amount;
-          }
-        });
-
-        const chartData: ChartEntry[] = Object.entries(grouped)
-          .map(([month, { income, expense }]) => ({
-            month,
-            income,
-            expense,
-          }))
-          .sort((a, b) => a.month.localeCompare(b.month));
-
-        setData(chartData);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("Something went wrong.");
-        }
-      } finally {
-        setLoading(false);
-      }
+    if (!grouped[monthKey]) {
+      grouped[monthKey] = { income: 0, expense: 0 };
     }
 
-    load();
-  }, []);
+    if (tx.type === "income") {
+      grouped[monthKey].income += tx.amount;
+    } else {
+      grouped[monthKey].expense += tx.amount;
+    }
+  });
 
-  if (loading) return <p className="text-gray-500">Loading chart...</p>;
-  if (error) return <p className="text-red-600">{error}</p>;
+  const chartData: ChartEntry[] = Object.entries(grouped)
+    .map(([month, { income, expense }]) => ({
+      month,
+      income,
+      expense,
+    }))
+    .sort((a, b) => a.month.localeCompare(b.month));
 
   return (
-    <div className="mt-6 bg-white p-4 rounded shadow w-full max-w-3xl mx-auto">
-      <h2 className="text-xl font-bold mb-4">Monthly Income vs Expenses</h2>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
-          <YAxis />
-          <Tooltip />
-          <Legend />
-          <Bar dataKey="income" fill="#34D399" name="Income" />
-          <Bar dataKey="expense" fill="#F87171" name="Expense" />
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="mt-6 bg-white dark:bg-zinc-900 p-4 rounded shadow w-full max-w-3xl mx-auto border border-gray-200 dark:border-zinc-700">
+      <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
+        📈 Monthly Income vs Expenses
+      </h2>
+      {chartData.length === 0 ? (
+        <p className="text-center text-gray-500 dark:text-gray-400">
+          No data to display.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="income" fill="#34D399" name="Income" />
+            <Bar dataKey="expense" fill="#F87171" name="Expense" />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </div>
   );
 }

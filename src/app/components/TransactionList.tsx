@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface Transaction {
   _id: string;
@@ -8,164 +8,162 @@ interface Transaction {
   description: string;
   date: string;
   type: "income" | "expense";
+  category?: string;
 }
 
-export default function TransactionList() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+interface Props {
+  transactions: Transaction[];
+  onUpdate: () => Promise<void>;
+}
+
+export default function TransactionList({ transactions, onUpdate }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     amount: "",
     description: "",
     date: "",
     type: "expense",
+    category: "General",
   });
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("/api/transactions");
-      const data: Transaction[] = await res.json();
-      setTransactions(data);
-    } catch (err) {
-      setError("Failed to fetch transactions.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function handleDelete(id: string) {
-    const confirmed = confirm("Are you sure you want to delete this transaction?");
-    if (!confirmed) return;
-
-    try {
-      const res = await fetch(`/api/transactions/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!res.ok) throw new Error("Failed to delete transaction");
-
-      fetchData();
-    } catch {
-      alert("Failed to delete transaction.");
-    }
-  }
-
-  async function handleUpdate(id: string) {
-    try {
-      const res = await fetch(`/api/transactions/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editForm),
-      });
-
-      if (!res.ok) throw new Error("Failed to update");
-
-      setEditingId(null);
-      fetchData();
-    } catch {
-      alert("Update failed.");
-    }
-  }
-
-  const handleEdit = (tx: Transaction) => {
+  function handleEdit(tx: Transaction) {
     setEditingId(tx._id);
     setEditForm({
       amount: tx.amount.toString(),
       description: tx.description,
       date: tx.date.slice(0, 10),
       type: tx.type,
+      category: tx.category || "General",
     });
-  };
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingId) return;
+
+    await fetch(`/api/transactions/${editingId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(editForm),
+    });
+
+    setEditingId(null);
+    await onUpdate();
+  }
+
+  async function handleDelete(id: string) {
+    await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+    await onUpdate();
+  }
 
   return (
-    <div className="mt-6 space-y-4 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-4">Transactions</h2>
-
-      {loading && <p className="text-gray-400">Loading...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      {!loading && transactions.length === 0 && (
-        <p className="text-gray-400 italic">No transactions found.</p>
-      )}
-
+    <div className="max-w-3xl mx-auto mt-10 space-y-4">
       {transactions.map((tx) =>
         editingId === tx._id ? (
-          <div key={tx._id} className="p-4 bg-gray-800 text-white rounded space-y-2 shadow-md">
-            <input
-              type="number"
-              value={editForm.amount}
-              onChange={(e) => setEditForm({ ...editForm, amount: e.target.value })}
-              className="w-full p-2 rounded text-black"
-            />
-            <input
-              type="text"
-              value={editForm.description}
-              onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-              className="w-full p-2 rounded text-black"
-            />
-            <input
-              type="date"
-              value={editForm.date}
-              onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
-              className="w-full p-2 rounded text-black"
-            />
-            <select
-              value={editForm.type}
-              onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
-              className="w-full p-2 rounded text-black"
-            >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-            <div className="flex space-x-4 mt-2">
+          <form
+            key={tx._id}
+            onSubmit={handleUpdate}
+            className="bg-white dark:bg-zinc-900 border p-4 rounded-xl space-y-2 shadow"
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                type="number"
+                value={editForm.amount}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, amount: e.target.value })
+                }
+                className="p-2 rounded w-full text-black"
+              />
+              <input
+                type="text"
+                value={editForm.description}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, description: e.target.value })
+                }
+                className="p-2 rounded w-full text-black"
+              />
+              <input
+                type="date"
+                value={editForm.date}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, date: e.target.value })
+                }
+                className="p-2 rounded w-full text-black"
+              />
+              <select
+                value={editForm.type}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, type: e.target.value })
+                }
+                className="p-2 rounded w-full text-black"
+              >
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+              <select
+                value={editForm.category}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, category: e.target.value })
+                }
+                className="p-2 rounded w-full text-black"
+              >
+                <option value="Food">🍔 Food</option>
+                <option value="Rent">🏠 Rent</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Transport">🚌 Transport</option>
+                <option value="Utilities">💡 Utilities</option>
+                <option value="Salary">💼 Salary</option>
+                <option value="General">📦 General</option>
+              </select>
+            </div>
+            <div className="flex gap-3 pt-2">
               <button
-                onClick={() => handleUpdate(tx._id)}
+                type="submit"
                 className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
               >
-                Save
+                ✅ Save
               </button>
               <button
+                type="button"
                 onClick={() => setEditingId(null)}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded"
               >
-                Cancel
+                ❌ Cancel
               </button>
             </div>
-          </div>
+          </form>
         ) : (
           <div
             key={tx._id}
-            className={`flex justify-between items-center p-4 border rounded shadow-sm ${
-              tx.type === "income" ? "bg-green-50" : "bg-red-50"
-            }`}
+            className="bg-white dark:bg-zinc-900 border p-4 rounded-xl shadow flex justify-between items-center"
           >
             <div>
               <p className="font-semibold text-lg">
                 ₹ {tx.amount}{" "}
-                <span className="text-sm font-normal text-gray-500">({tx.type})</span>
+                <span className="text-sm font-normal text-gray-500">
+                  ({tx.type})
+                </span>
               </p>
-              <p className="text-gray-800">{tx.description}</p>
-              <p className="text-sm text-gray-500">{new Date(tx.date).toDateString()}</p>
+              <p className="text-gray-800 dark:text-gray-200">{tx.description}</p>
+              <p className="text-sm text-gray-500">
+                {new Date(tx.date).toDateString()}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                🏷️ {tx.category || "General"}
+              </p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               <button
                 onClick={() => handleEdit(tx)}
-                className="text-blue-600 hover:underline text-sm"
+                className="bg-yellow-400 hover:bg-yellow-500 text-black px-3 py-1 rounded"
               >
-                Edit
+                ✏️
               </button>
               <button
                 onClick={() => handleDelete(tx._id)}
-                className="text-red-600 hover:underline text-sm"
+                className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded"
               >
-                Delete
+                🗑️
               </button>
             </div>
           </div>

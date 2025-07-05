@@ -8,12 +8,13 @@ export default function TransactionForm({ onAdd }: { onAdd: () => void }) {
     description: "",
     date: "",
     type: "expense",
+    category: "General", // ✅ Added category
   });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!form.amount || !form.description || !form.date || !form.type) {
+    if (!form.amount || !form.description || !form.date || !form.type || !form.category) {
       alert("All fields are required");
       return;
     }
@@ -24,7 +25,13 @@ export default function TransactionForm({ onAdd }: { onAdd: () => void }) {
       body: JSON.stringify(form),
     });
 
-    setForm({ amount: "", description: "", date: "", type: "expense" });
+    setForm({
+      amount: "",
+      description: "",
+      date: "",
+      type: "expense",
+      category: "General",
+    });
     onAdd();
   }
 
@@ -71,18 +78,39 @@ export default function TransactionForm({ onAdd }: { onAdd: () => void }) {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Type
-            </label>
-            <select
-              value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="w-full border border-gray-300 dark:border-zinc-600 p-2 rounded-lg bg-white dark:bg-zinc-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Type
+              </label>
+              <select
+                value={form.type}
+                onChange={(e) => setForm({ ...form, type: e.target.value })}
+                className="w-full border border-gray-300 dark:border-zinc-600 p-2 rounded-lg bg-white dark:bg-zinc-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Category
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full border border-gray-300 dark:border-zinc-600 p-2 rounded-lg bg-white dark:bg-zinc-800 text-black dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Food">🍔 Food</option>
+                <option value="Rent">🏠 Rent</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Transport">🚌 Transport</option>
+                <option value="Utilities">💡 Utilities</option>
+                <option value="Salary">💼 Salary</option>
+                <option value="General">📦 General</option>
+              </select>
+            </div>
           </div>
 
           <button
