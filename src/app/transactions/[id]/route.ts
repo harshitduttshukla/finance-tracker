@@ -1,4 +1,3 @@
-// app/api/transactions/[id]/route.ts
 import { connectDB } from "@/lib/db";
 import Transaction from "@/models/Transaction";
 import { NextRequest, NextResponse } from "next/server";
@@ -10,8 +9,7 @@ export async function PUT(
 ) {
   try {
     await connectDB();
-    const { id } = params;
-
+    const id = params.id;
     const body = await req.json();
 
     const updatedTransaction = await Transaction.findByIdAndUpdate(id, body, {
@@ -42,7 +40,7 @@ export async function DELETE(
 ) {
   try {
     await connectDB();
-    const { id } = params;
+    const id = params.id;
 
     const deletedTransaction = await Transaction.findByIdAndDelete(id);
 
