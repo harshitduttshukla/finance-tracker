@@ -2,61 +2,47 @@ import { connectDB } from "@/lib/db";
 import Transaction from "@/models/Transaction";
 import { NextRequest, NextResponse } from "next/server";
 
-// ✅ PUT /api/transactions/:id → Update a transaction
+// ✅ PUT /api/transactions/[id]
 export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const id = params.id;
-    const body = await req.json();
+    const { id } = context.params;
+    const body = await request.json();
 
-    const updatedTransaction = await Transaction.findByIdAndUpdate(id, body, {
-      new: true,
-    });
+    const updated = await Transaction.findByIdAndUpdate(id, body, { new: true });
 
-    if (!updatedTransaction) {
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 }
-      );
+    if (!updated) {
+      return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
 
-    return NextResponse.json(updatedTransaction, { status: 200 });
+    return NextResponse.json(updated, { status: 200 });
   } catch (error) {
-    console.error("PUT /transactions/:id error:", error);
-    return NextResponse.json(
-      { error: "Failed to update transaction" },
-      { status: 500 }
-    );
+    console.error("Update Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
-// ✅ DELETE /api/transactions/:id → Delete a transaction
+// ✅ DELETE /api/transactions/[id]
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const id = params.id;
+    const { id } = context.params;
 
-    const deletedTransaction = await Transaction.findByIdAndDelete(id);
+    const deleted = await Transaction.findByIdAndDelete(id);
 
-    if (!deletedTransaction) {
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 }
-      );
+    if (!deleted) {
+      return NextResponse.json({ error: "Transaction not found" }, { status: 404 });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
-    console.error("DELETE /transactions/:id error:", error);
-    return NextResponse.json(
-      { error: "Failed to delete transaction" },
-      { status: 500 }
-    );
+    console.error("Delete Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
