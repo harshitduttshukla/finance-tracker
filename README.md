@@ -64,5 +64,5 @@ A full-stack finance tracker application to manage your daily income and expense
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/finance-tracker.git
+git clone  https://github.com/harshitduttshukla/finance-tracker.git
 cd finance-tracker
