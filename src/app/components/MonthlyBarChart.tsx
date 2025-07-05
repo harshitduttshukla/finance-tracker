@@ -65,8 +65,12 @@ export default function MonthlyBarChart() {
           .sort((a, b) => a.month.localeCompare(b.month));
 
         setData(chartData);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong.");
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("Something went wrong.");
+        }
       } finally {
         setLoading(false);
       }
@@ -79,7 +83,7 @@ export default function MonthlyBarChart() {
   if (error) return <p className="text-red-600">{error}</p>;
 
   return (
-    <div className="mt-6 bg-white p-4 rounded shadow w-full max-w-3xl">
+    <div className="mt-6 bg-white p-4 rounded shadow w-full max-w-3xl mx-auto">
       <h2 className="text-xl font-bold mb-4">Monthly Income vs Expenses</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>

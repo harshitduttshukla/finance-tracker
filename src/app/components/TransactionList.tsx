@@ -26,7 +26,7 @@ export default function TransactionList() {
     try {
       setLoading(true);
       const res = await fetch("/api/transactions");
-      const data = await res.json();
+      const data: Transaction[] = await res.json();
       setTransactions(data);
     } catch (err) {
       setError("Failed to fetch transactions.");
@@ -49,8 +49,9 @@ export default function TransactionList() {
       });
 
       if (!res.ok) throw new Error("Failed to delete transaction");
+
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Failed to delete transaction.");
     }
   }
@@ -69,7 +70,7 @@ export default function TransactionList() {
 
       setEditingId(null);
       fetchData();
-    } catch (err) {
+    } catch {
       alert("Update failed.");
     }
   }
@@ -85,8 +86,8 @@ export default function TransactionList() {
   };
 
   return (
-    <div className="mt-6 space-y-4 max-w-2xl">
-      <h2 className="text-xl font-bold text-white">Transactions</h2>
+    <div className="mt-6 space-y-4 max-w-2xl mx-auto">
+      <h2 className="text-2xl font-bold text-white mb-4">Transactions</h2>
 
       {loading && <p className="text-gray-400">Loading...</p>}
       {error && <p className="text-red-600">{error}</p>}
@@ -123,16 +124,16 @@ export default function TransactionList() {
               <option value="expense">Expense</option>
               <option value="income">Income</option>
             </select>
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 mt-2">
               <button
                 onClick={() => handleUpdate(tx._id)}
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
               >
                 Save
               </button>
               <button
                 onClick={() => setEditingId(null)}
-                className="bg-gray-500 text-white px-4 py-2 rounded"
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
               >
                 Cancel
               </button>
@@ -141,7 +142,7 @@ export default function TransactionList() {
         ) : (
           <div
             key={tx._id}
-            className={`flex justify-between items-center p-3 border rounded shadow-sm ${
+            className={`flex justify-between items-center p-4 border rounded shadow-sm ${
               tx.type === "income" ? "bg-green-50" : "bg-red-50"
             }`}
           >
