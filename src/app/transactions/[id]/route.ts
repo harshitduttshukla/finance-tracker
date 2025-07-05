@@ -1,16 +1,16 @@
 // app/api/transactions/[id]/route.ts
 import { connectDB } from "@/lib/db";
 import Transaction from "@/models/Transaction";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-// PUT /api/transactions/:id → Update a transaction
+// ✅ PUT /api/transactions/:id → Update a transaction
 export async function PUT(
-  req: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
 
     const body = await req.json();
 
@@ -35,14 +35,14 @@ export async function PUT(
   }
 }
 
-// DELETE /api/transactions/:id → Delete a transaction
+// ✅ DELETE /api/transactions/:id → Delete a transaction
 export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }
+  req: NextRequest,
+  { params }: { params: { id: string } }
 ) {
   try {
     await connectDB();
-    const { id } = context.params;
+    const { id } = params;
 
     const deletedTransaction = await Transaction.findByIdAndDelete(id);
 
@@ -62,6 +62,3 @@ export async function DELETE(
     );
   }
 }
-
-
-
